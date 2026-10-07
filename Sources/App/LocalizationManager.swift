@@ -30,6 +30,7 @@ enum L10nKey: String, CaseIterable {
     case sizeSection, sizeHint, hoverSize, perchWidth, amplitudeLabel
     // Settings — behaviour
     case behaviourSection, wanderTitle, wanderHint, soundTitle, soundHint
+    case randomFaceTitle, randomFaceHint
     // Settings — skin
     case skinSection, skinHint, tapToSwitch
     // Settings — actions
@@ -86,6 +87,112 @@ final class LocalizationManager: ObservableObject {
         strings[key]?[resolved] ?? strings[key]?[.english] ?? key.rawValue
     }
 
+    // MARK: - Hover bubble: date, time, and one kind word
+
+    /// The little things she says when the pointer rests on her.
+    private let caringSentences: [AppLanguage: [String]] = [
+        .simplifiedChinese: [
+            "工作再忙也要照顾好自己哦",
+            "记得喝水，别一直盯着屏幕",
+            "今天也辛苦了，先伸个懒腰吧",
+            "饭要好好吃，我在这里陪你",
+            "累了就歇一会儿，天塌不下来",
+            "你已经做得很好了，真的",
+            "别熬太晚，明天还要继续加油",
+            "眼睛酸了就看看窗外",
+            "深呼吸一下，慢慢来也可以",
+            "有我在，不用什么都自己扛",
+            "记得站起来动一动，坐太久了",
+            "今天想吃点什么好的？",
+            "不高兴的话，就戳戳我吧",
+            "慢慢来，我们还有时间",
+            "你已经很努力了，允许自己偷个懒",
+            "笑一个吧，我一直看着你呢",
+        ],
+        .traditionalChinese: [
+            "工作再忙也要照顧好自己喔",
+            "記得喝水，別一直盯著螢幕",
+            "今天也辛苦了，先伸個懶腰吧",
+            "飯要好好吃，我在這裡陪你",
+            "累了就歇一會兒，天塌不下來",
+            "你已經做得很好了，真的",
+            "別熬太晚，明天還要繼續加油",
+            "眼睛酸了就看看窗外",
+            "深呼吸一下，慢慢來也可以",
+            "有我在，不用什麼都自己扛",
+            "記得站起來動一動，坐太久了",
+            "今天想吃點什麼好的？",
+            "不高興的話，就戳戳我吧",
+            "慢慢來，我們還有時間",
+            "你已經很努力了，允許自己偷個懶",
+            "笑一個吧，我一直看著你呢",
+        ],
+        .english: [
+            "Take care of yourself — work can wait a minute",
+            "Drink some water, stop staring at the screen",
+            "You did well today. Stretch a little",
+            "Eat something proper — I'm right here with you",
+            "If you're tired, rest. The world keeps spinning",
+            "You're doing better than you think",
+            "Don't stay up too late, okay?",
+            "Look out the window for a moment",
+            "Take a deep breath. Slow is fine too",
+            "You don't have to carry everything alone",
+            "Stand up and walk around a bit",
+            "What would you like to eat today?",
+            "If you're upset, poke me for a squeak",
+            "No rush — we have time",
+            "You've worked hard. It's okay to slack off",
+            "Smile a little — I'm keeping an eye on you",
+        ],
+    ]
+
+    /// A different kind word each time she is hovered.
+    func randomCaringSentence(excluding previous: String = "") -> String {
+        let pool = caringSentences[resolved] ?? caringSentences[.english] ?? []
+        guard pool.count > 1 else { return pool.first ?? "" }
+        var pick = pool.randomElement() ?? ""
+        var attempts = 0
+        while pick == previous && attempts < 6 {
+            pick = pool.randomElement() ?? ""
+            attempts += 1
+        }
+        return pick
+    }
+
+    /// Locale that matches the in-app language, not the system one.
+    private func locale(for language: AppLanguage) -> Locale {
+        switch language {
+        case .english: return Locale(identifier: "en_US")
+        case .simplifiedChinese: return Locale(identifier: "zh_CN")
+        case .traditionalChinese: return Locale(identifier: "zh_TW")
+        case .system: return Locale(identifier: "en_US")
+        }
+    }
+
+    private var dateFormatterCache: [String: DateFormatter] = [:]
+
+    private func formatter(localeIdentifier: String, dateStyle: DateFormatter.Style, timeStyle: DateFormatter.Style) -> DateFormatter {
+        let key = "\(localeIdentifier)-\(dateStyle.rawValue)-\(timeStyle.rawValue)"
+        if let hit = dateFormatterCache[key] { return hit }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: localeIdentifier)
+        formatter.dateStyle = dateStyle
+        formatter.timeStyle = timeStyle
+        dateFormatterCache[key] = formatter
+        return formatter
+    }
+
+    /// e.g. 「2026年10月7日星期三」/ "Wednesday, October 7, 2026"
+    func fullDate(_ date: Date) -> String {
+        formatter(localeIdentifier: locale(for: resolved).identifier, dateStyle: .full, timeStyle: .none).string(from: date)
+    }
+
+    /// e.g. 「13:05:22」/ "1:05:22 PM" — follows the locale's 12/24-hour habit.
+    func mediumTime(_ date: Date) -> String {
+        formatter(localeIdentifier: locale(for: resolved).identifier, dateStyle: .none, timeStyle: .medium).string(from: date)
+    }
+
     private let strings: [L10nKey: [AppLanguage: String]] = [
         // ---------------------------------------------------------------- Identity
         .appName: [.english: "BaifanYu", .simplifiedChinese: "白饭鱼", .traditionalChinese: "白飯魚"],
@@ -122,9 +229,13 @@ final class LocalizationManager: ObservableObject {
 
         .behaviourSection: [.english: "Behaviour", .simplifiedChinese: "行为", .traditionalChinese: "行為"],
         .wanderTitle: [.english: "Wander around", .simplifiedChinese: "自动溜达", .traditionalChinese: "自動溜達"],
-        .wanderHint: [.english: "She crawls around on her own when idle (never while you touch, drag or perch her)",
-                      .simplifiedChinese: "闲着的时候她自己爬来爬去（碰她、拖她、趴边时不动）",
-                      .traditionalChinese: "閒著的時候她自己爬來爬去（碰她、拖她、趴邊時不動）"],
+        .wanderHint: [.english: "She crawls around on her own when idle (never while you touch, drag or perch her, and she stops the moment the pointer rests on her)",
+                      .simplifiedChinese: "闲着的时候她自己爬来爬去（鼠标停在她身上、碰她、拖她、趴边时不动）",
+                      .traditionalChinese: "閒著的時候她自己爬來爬去（滑鼠停在她身上、碰她、拖她、趴邊時不動）"],
+        .randomFaceTitle: [.english: "Random expressions", .simplifiedChinese: "随机换表情", .traditionalChinese: "隨機換表情"],
+        .randomFaceHint: [.english: "She changes expression by herself every so often while she idles",
+                          .simplifiedChinese: "闲着的时候她会自己变表情（隔十几秒到一分多钟换一个）",
+                          .traditionalChinese: "閒著的時候她自己換表情（隔十幾秒到一分多鐘換一個）"],
         .soundTitle: [.english: "Rubber-duck squeak", .simplifiedChinese: "小黄鸭音效", .traditionalChinese: "小黃鴨音效"],
         .soundHint: [.english: "Click her and she squeaks", .simplifiedChinese: "点她一下，吱一声", .traditionalChinese: "點她一下，吱一聲"],
 
@@ -161,9 +272,9 @@ final class LocalizationManager: ObservableObject {
 
         // ---------------------------------------------------------------- How to play
         .howToTitle: [.english: "How to play", .simplifiedChinese: "怎么玩", .traditionalChinese: "怎麼玩"],
-        .howToBody: [.english: "· Hold her and drag anywhere\n· Drag to the left or right edge of the screen and let go — she hangs there, only her head showing\n· Drag her back from the edge to make her float again\n· Click her for another expression\n· Right-click her (or press and hold) for skin / settings / call her back",
-                     .simplifiedChinese: "· 按住她，拖到任意位置\n· 拖到屏幕左右边缘松手 —— 她会扒在边上，只露一个脑袋看着你\n· 从边缘往外拖，回到悬空状态\n· 点她一下，换一个表情\n· 右键点她（或长按）弹出「皮肤 / 设置 / 收回」",
-                     .traditionalChinese: "· 按住她，拖到任意位置\n· 拖到螢幕左右邊緣放手 —— 她會扒在邊上，只露一個腦袋看著你\n· 從邊緣往外拖，回到懸空狀態\n· 點她一下，換一個表情\n· 右鍵點她（或長按）彈出「皮膚 / 設定 / 收回」"],
+        .howToBody: [.english: "· Hold her and drag anywhere\n· Drag to the left or right edge of the screen and let go — she hangs there, only her head showing\n· Drag her back from the edge to make her float again\n· Click her for another expression\n· Rest the pointer on her: she stops, and a bubble shows the date, the time and a random kind word\n· Right-click her (or press and hold) for skin / settings / call her back",
+                     .simplifiedChinese: "· 按住她，拖到任意位置\n· 拖到屏幕左右边缘松手 —— 她会扒在边上，只露一个脑袋看着你\n· 从边缘往外拖，回到悬空状态\n· 点她一下，换一个表情\n· 鼠标停在她身上：她就不动了，旁边浮出一个小气泡，写今天的日期、时间，还有一句随机的关心\n· 右键点她（或长按）弹出「皮肤 / 设置 / 收回」",
+                     .traditionalChinese: "· 按住她，拖到任意位置\n· 拖到螢幕左右邊緣放手 —— 她會扒在邊上，只露一個腦袋看著你\n· 從邊緣往外拖，回到懸空狀態\n· 點她一下，換一個表情\n· 滑鼠停在她身上：她就不動了，旁邊浮出一個小氣泡，寫今天的日期、時間，還有一句隨機的關心\n· 右鍵點她（或長按）彈出「皮膚 / 設定 / 收回」"],
 
         // ---------------------------------------------------------------- About
         .aboutBody: [.english: "A tiny whale girl who floats on your desktop, eats white rice and squeaks when poked.",

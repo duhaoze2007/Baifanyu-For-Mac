@@ -30,6 +30,9 @@ final class PetController: NSObject, ObservableObject {
     @Published var wanderOn: Bool {
         didSet { AppSettings.wanderOn = wanderOn }
     }
+    @Published var randomFace: Bool {
+        didSet { AppSettings.randomFace = randomFace }
+    }
     @Published var skinIndex: Int {
         didSet { AppSettings.skinIndex = skinIndex; applySkin() }
     }
@@ -57,12 +60,25 @@ final class PetController: NSObject, ObservableObject {
     private let wanderMargin: CGFloat = 14
     private let wanderStep: CGFloat = 4
 
+    // Random expressions — she changes face on her own now and then.
+    private var nextFaceChangeAt: CFTimeInterval = 0
+    private static let faceInterval: ClosedRange<Double> = 18...75
+
+    // Hover: she stops wandering, and a bubble shows date / time / a kind word.
+    private var isHoveringHer = false
+    private var hoverBeganAt: CFTimeInterval = 0
+    private var lastBubbleSecond = -1
+    private var lastBubbleSentence = ""
+    private var lastBubbleAnchor: NSRect = .zero
+    private let bubble = HoverBubble()
+
     private override init() {
         hoverHeight = AppSettings.hoverHeight
         perchWidth = AppSettings.perchWidth
         amplitude = AppSettings.amplitude
         soundOn = AppSettings.soundOn
         wanderOn = AppSettings.wanderOn
+        randomFace = AppSettings.randomFace
         skinIndex = AppSettings.skinIndex
         super.init()
     }
@@ -115,6 +131,7 @@ final class PetController: NSObject, ObservableObject {
         view = petView
         isRunning = true
         AppSettings.isRunning = true
+        scheduleNextRandomFace(from: CACurrentMediaTime())
 
         if AppSettings.isPerched {
             enterPerch(onRight: AppSettings.perchedEdge == 1, persist: false)
@@ -124,6 +141,8 @@ final class PetController: NSObject, ObservableObject {
 
     func hide() {
         stopFrameTimer()
+        bubble.hide()
+        setHovering(false)
         panel?.orderOut(nil)
         panel?.contentView = nil
         panel = nil
@@ -159,6 +178,7 @@ final class PetController: NSObject, ObservableObject {
         view.setExpression(0)
         PetArtworkStore.shared.purge()
         expression = 0
+        scheduleNextRandomFace(from: CACurrentMediaTime())
         applyLayout()
     }
 
@@ -267,9 +287,12 @@ final class PetController: NSObject, ObservableObject {
     @objc private func frameTick() {
         guard isRunning, panel != nil, view != nil else { return }
         if !screenAsleep && !sessionInactive {
+            let now = CACurrentMediaTime()
+            updatePointerState()     // hover: also her may have wandered under a still pointer
             updateWander()
-            updateClickThrough()   // she may have wandered under a still pointer
-            view?.tick(now: CACurrentMediaTime())
+            updateRandomFace(now: now)
+            updateBubble(now: now)
+            view?.tick(now: now)
         }
     }
 
@@ -309,18 +332,21 @@ final class PetController: NSObject, ObservableObject {
         guard !didInstallMonitors else { return }
         didInstallMonitors = true
         NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged, .rightMouseDragged]) { [weak self] event in
-            self?.updateClickThrough()
+            self?.updatePointerState()
             return event
         }
         NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved]) { [weak self] _ in
-            self?.updateClickThrough()
+            self?.updatePointerState()
         }
     }
 
-    private func updateClickThrough() {
-        guard let panel, let view, isRunning else { return }
+    /// One pass over the pointer: is it on her, and should her window let the
+    /// click through to whatever is behind her?
+    private func updatePointerState() {
+        guard let panel, let view, isRunning else { setHovering(false); return }
         if view.isBeingDragged {  // never let go of a drag in progress
             if panel.ignoresMouseEvents { panel.ignoresMouseEvents = false }
+            setHovering(false)
             return
         }
         let mouse = NSEvent.mouseLocation
@@ -331,6 +357,8 @@ final class PetController: NSObject, ObservableObject {
             let viewPoint = view.convert(windowPoint, from: nil)
             shouldIgnore = !view.isOpaque(atViewPoint: viewPoint)
         }
+        setHovering(insideFrame && !shouldIgnore)
+
         guard shouldIgnore != panel.ignoresMouseEvents else { return }
         panel.ignoresMouseEvents = shouldIgnore
         // She is transparent right under the pointer — give the cursor back to
@@ -338,13 +366,90 @@ final class PetController: NSObject, ObservableObject {
         if shouldIgnore && insideFrame { NSCursor.arrow.set() }
     }
 
+    // MARK: - Hover: she stops, and a bubble shows the date, time and a kind word
+
+    private func setHovering(_ hovering: Bool) {
+        guard hovering != isHoveringHer else { return }
+        isHoveringHer = hovering
+        if hovering {
+            hoverBeganAt = CACurrentMediaTime()
+        } else {
+            bubble.hide()
+            lastBubbleSecond = -1
+            lastBubbleAnchor = .zero
+        }
+    }
+
+    private func updateBubble(now: CFTimeInterval) {
+        guard let panel else { bubble.hide(); return }
+        guard isHoveringHer, !(view?.isBeingDragged ?? false) else { bubble.hide(); return }
+
+        let locale = LocalizationManager.shared
+        if !bubble.isVisible {
+            // Wait a beat before popping up, so a passing cursor doesn't flash it.
+            guard now - hoverBeganAt >= 0.55 else { return }
+            let sentence = locale.randomCaringSentence(excluding: lastBubbleSentence)
+            let moment = Date()
+            bubble.show(near: panel.frame, on: panel.screen, sentence: sentence,
+                        date: locale.fullDate(moment), time: locale.mediumTime(moment))
+            lastBubbleSentence = sentence
+            lastBubbleSecond = Int(now)
+            lastBubbleAnchor = panel.frame
+            return
+        }
+
+        if panel.frame != lastBubbleAnchor {   // she can be resized or dragged
+            bubble.move(near: panel.frame, on: panel.screen)
+            lastBubbleAnchor = panel.frame
+        }
+        let second = Int(now)
+        if second != lastBubbleSecond {        // keep the clock honest
+            lastBubbleSecond = second
+            let moment = Date()
+            bubble.model.dateText = locale.fullDate(moment)
+            bubble.model.timeText = locale.mediumTime(moment)
+        }
+    }
+
+    // MARK: - Random expressions
+
+    private func scheduleNextRandomFace(from now: CFTimeInterval) {
+        nextFaceChangeAt = now + Double.random(in: Self.faceInterval)
+    }
+
+    private func updateRandomFace(now: CFTimeInterval) {
+        guard randomFace, isRunning, let view else { return }
+        guard !view.isBeingDragged, !isHoveringHer else { return }
+        // Don't override a face the user just picked.
+        guard view.secondsSinceTouch > 4 else { scheduleNextRandomFace(from: now); return }
+        guard nextFaceChangeAt > 0 else { scheduleNextRandomFace(from: now); return }
+        guard now >= nextFaceChangeAt else { return }
+        view.setExpression(randomExpression(differentFrom: view.expression))
+        expression = view.expression
+        scheduleNextRandomFace(from: now)
+    }
+
+    /// Includes the neutral standing art, so she also drifts back to plain now and then.
+    private func randomExpression(differentFrom current: Int) -> Int {
+        let skin = PetSkin.skin(at: skinIndex)
+        var candidates: [Int] = []
+        for candidate in 0...skin.expressionCount where candidate != current {
+            if candidate == 0 || PetArtworkStore.shared.sourceImage(skin: skin, expression: candidate) != nil {
+                candidates.append(candidate)
+            }
+        }
+        return candidates.randomElement() ?? current
+    }
+
     // MARK: - Idle wandering
 
     private func updateWander() {
         guard let panel, let view else { return }
         guard wanderOn, isRunning else { view.walking = false; return }
-        guard !isPerched, !view.isBeingDragged, view.secondsSinceTouch > 5 else {
+        // The pointer resting on her (or a fresh touch / drag / perch) freezes her.
+        guard !isPerched, !view.isBeingDragged, !isHoveringHer, view.secondsSinceTouch > 5 else {
             view.walking = false
+            wanderTargetX = -1
             return
         }
         let now = CACurrentMediaTime()
@@ -381,6 +486,8 @@ final class PetController: NSObject, ObservableObject {
         guard let view else { return }
         let next = view.cycleExpression()
         expression = next
+        // Give her a fresh window before she changes face by herself again.
+        scheduleNextRandomFace(from: CACurrentMediaTime())
     }
 
     func selectSkin(_ index: Int) {
@@ -477,6 +584,7 @@ extension PetController: PetInteractionDelegate {
 
     func petViewWasTapped(_ view: PetView) {
         expression = view.expression
+        scheduleNextRandomFace(from: CACurrentMediaTime())
         if soundOn { DuckSound.shared.squeak() }
     }
 

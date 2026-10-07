@@ -34,9 +34,11 @@ She floats on your desktop as a tiny borderless window. Drag her anywhere; drop 
 - **Drag** her anywhere — she tilts in the direction you are dragging
 - **Perch on a screen edge** — drag her to the left or right edge and let go: she hangs there, head rotated 90°, only her head visible
 - **Six expressions** per skin, cycled by clicking her (whole artwork swaps, so no seams)
+- **Random expressions** — while she idles she changes face by herself every 18–75 s (menu bar + Settings toggle)
+- **Rest the pointer on her** and she stops wandering; a bubble appears with today's date, a live clock and a random kind word — move the pointer away and she carries on
 - **Two skins**: bowl-head (饭盆头) and maid outfit (女仆装)
 - **Rubber-duck squeak** on click, three real duck samples, can be switched off
-- **Idle wandering** — she crawls around on her own; she stops when you touch, drag, or perch her
+- **Idle wandering** — she crawls around on her own; she stops when you touch, drag, perch her, or leave the pointer resting on her
 - **Three size sliders**: floating height, head width while perched, amount of motion
 - **Right-click menu** on her body: skin / next expression / settings / call her back
 - **Menu bar resident**, no Dock icon — her face sits in the menu bar
@@ -52,9 +54,11 @@ She floats on your desktop as a tiny borderless window. Drag her anywhere; drop 
 - **拖拽** —— 拖到哪算哪，拖动时朝拖动方向倾斜
 - **扒边** —— 拖到屏幕左右边缘松手，她扒在边上、头旋转 90°、只露一个脑袋
 - **每套皮肤 6 个表情**，点她循环切换（整张立绘切换，没有接缝）
+- **随机换表情** —— 闲着的时候她自己每隔 18~75 秒换一个表情（菜单栏 + 设置里都能开关）
+- **鼠标停在她身上**：她就不走了，旁边浮出一个小气泡，写今天的日期、实时的时间和一句随机的关心话；鼠标移开她就继续
 - **两套皮肤**：饭盆头 / 女仆装
 - **小黄鸭音效**：点击时随机播一个真实鸭叫，可关
-- **自动溜达** —— 闲着的时候她自己爬来爬去；碰她、拖她、趴边时不动
+- **自动溜达** —— 闲着的时候她自己爬来爬去；碰她、拖她、趴边、鼠标停在她身上时不动
 - **三档调节**：悬空大小 / 扒边时脑袋宽度 / 动态幅度
 - **右键菜单**：皮肤 / 换表情 / 设置 / 收回她
 - **菜单栏常驻**，没有 Dock 图标 —— 她的脸就在菜单栏上
@@ -99,9 +103,10 @@ bash scripts/make_dmg.sh                # distributable disk image
 1. `open BaifanYu.app` — the first time, the system asks nothing and she simply appears
 2. **Hold her and drag** to move her; **drag to the left or right screen edge and let go** to make her hang there
 3. **Click her** for another expression (and a squeak)
-4. **Right-click her** (or press and hold) for skin / next expression / settings / call her back
-5. Her face in the **menu bar** is home base: bring her out or call her back, switch skin, toggle the squeak and the wandering, open **Settings (⌘,)** or **About**
-6. Closing the settings window leaves her on your desktop — quit from the menu bar or with **⌘Q**
+4. **Rest the pointer on her** — she stops, and a bubble shows the date, a live clock and a random kind word; move away and she keeps wandering
+5. **Right-click her** (or press and hold) for skin / next expression / settings / call her back
+6. Her face in the **menu bar** is home base: bring her out or call her back, switch skin, toggle the squeak, the wandering and the random expressions, open **Settings (⌘,)** or **About**
+7. Closing the settings window leaves her on your desktop — quit from the menu bar or with **⌘Q**
 
 ---
 
@@ -142,7 +147,8 @@ Sources/
   Views/
     MenuBarView.swift        the menu bar dropdown
     SettingsView.swift       the settings window
-    AboutWindow.swift        About panel, launch-at-login helper
+    AboutWindow.swift        About window, launch-at-login helper
+    HoverBubble.swift        the hover bubble (date / clock / kind word)
     BundledImage.swift       resource lookup
   Resources/                 artwork + duck samples + icon
 ```

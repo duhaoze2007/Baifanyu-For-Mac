@@ -213,6 +213,8 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 12) {
                 toggleRow(title: locale[.wanderTitle], hint: locale[.wanderHint], isOn: $pet.wanderOn)
                 Divider()
+                toggleRow(title: locale[.randomFaceTitle], hint: locale[.randomFaceHint], isOn: $pet.randomFace)
+                Divider()
                 toggleRow(title: locale[.soundTitle], hint: locale[.soundHint], isOn: $pet.soundOn)
             }
             .padding(4)

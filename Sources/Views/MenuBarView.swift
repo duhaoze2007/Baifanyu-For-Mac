@@ -35,6 +35,7 @@ struct MenuBarView: View {
 
         Toggle(locale[.soundTitle], isOn: $pet.soundOn)
         Toggle(locale[.wanderTitle], isOn: $pet.wanderOn)
+        Toggle(locale[.randomFaceTitle], isOn: $pet.randomFace)
         Toggle(locale[.launchAtLogin], isOn: launchAtLoginBinding)
 
         Divider()

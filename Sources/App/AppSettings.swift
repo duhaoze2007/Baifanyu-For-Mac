@@ -14,6 +14,7 @@ enum AppSettings {
         static let amplitude   = "whalepet.amp_scale"
         static let soundOn     = "whalepet.sound_on"
         static let wanderOn    = "whalepet.wander_on"
+        static let randomFace  = "whalepet.random_face"
         static let skinIndex   = "whalepet.skin_index"
         static let running     = "whalepet.running"
         static let perched     = "whalepet.perched"
@@ -52,6 +53,12 @@ enum AppSettings {
     static var wanderOn: Bool {
         get { d.object(forKey: Key.wanderOn) as? Bool ?? true }
         set { d.set(newValue, forKey: Key.wanderOn) }
+    }
+
+    /// She picks a new expression by herself now and then.
+    static var randomFace: Bool {
+        get { d.object(forKey: Key.randomFace) as? Bool ?? true }
+        set { d.set(newValue, forKey: Key.randomFace) }
     }
 
     static var skinIndex: Int {
