@@ -81,6 +81,10 @@ She floats on your desktop as a tiny borderless window. Drag her anywhere; drop 
 - Apple Silicon or Intel / Apple Silicon 或 Intel
 - No Xcode needed — Command Line Tools are enough / 无需 Xcode，装了 Command Line Tools 即可
 
+Detailed version-by-version notes, the Android↔macOS comparison table and the known limitations:
+**[RELEASE_NOTES.md](RELEASE_NOTES.md)**
+版本说明、Android↔macOS 差异对照表和已知限制见 **[RELEASE_NOTES.md](RELEASE_NOTES.md)**。
+
 ## Build / 构建
 
 ```bash
