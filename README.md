@@ -11,16 +11,21 @@
 </p>
 
 <p align="center">
-  <i>macOS port of the Android app <a href="https://github.com/LIN428924379/baifanyu">LIN428924379/baifanyu</a></i>
+  <i>A macOS port of the Android desktop pet
+  <a href="https://github.com/LIN428924379/baifanyu">白饭鱼 / baifanyu</a> by
+  <a href="https://github.com/LIN428924379">LIN428924379</a></i>
+  <br>
+  <b>Thank you, LIN428924379 — the original idea, the character, the artwork and the
+  interaction design are all yours. 感谢原作者，这个移植只是把你的作品搬到了 Mac 上。</b>
 </p>
 
 ---
 
 ## What she is / 她是什么
 
-She floats on your desktop as a tiny borderless window. Drag her anywhere; drop her at the left or right edge of the screen and she hangs there with only her head showing, so she never blocks what you are looking at. Click her for another expression and a rubber-duck squeak. Right-click (or press and hold) for skin / settings / call her back. When you leave her alone she wanders a little, then rests.
+She floats on your desktop as a tiny borderless window. Drag her anywhere; drop her at the left or right edge of the screen and she hangs there with only her head showing, so she never blocks what you are looking at. Click her for another expression and a rubber-duck squeak. Rest the pointer on her and she stops, showing a bubble with the date, a live clock and a random kind word; leave her alone and she wanders a little and changes expression by herself now and then.
 
-她以一个极小的无边框窗口浮在桌面上。按住她可以拖到任意位置；拖到屏幕左右边缘松手，她会扒在边上、只露一个脑袋，绝不挡住你看的东西。点她一下换一个表情，顺便吱一声（小黄鸭音效）。右键（或长按）弹出「皮肤 / 设置 / 收回」；没人理她的时候她会自己爬两下，然后歇着。
+她以一个极小的无边框窗口浮在桌面上。按住她可以拖到任意位置；拖到屏幕左右边缘松手，她会扒在边上、只露一个脑袋，绝不挡住你看的东西。点她一下换一个表情，顺便吱一声（小黄鸭音效）。鼠标停在她身上她就不动了，旁边浮出一个小气泡写着日期、时间和一句随机的关心话；没人理她的时候她会自己爬两下、时不时自己换个表情。
 
 <p align="center">
   <img src="docs/expressions.png" width="760" alt="standing art + six expressions">
@@ -155,12 +160,36 @@ Sources/
 
 ---
 
-## Credits & License / 素材与许可
+## Credits & thanks / 致谢与许可
 
-- **Original Android app**: [LIN428924379/baifanyu](https://github.com/LIN428924379/baifanyu) (MIT) — this port reuses its artwork, its interaction design and its animation maths
-- **Character**: the DeepSeek-community whale girl; standing art & expressions generated with AI and cut out by the original author
-- **Duck squeaks**: [Mixkit](https://mixkit.co/free-sound-effects/duck/) (Mixkit Free License, free for commercial use, no attribution required)
-- **Code**: MIT — see [LICENSE](LICENSE)
-- **Artwork** (`Sources/Resources/*.png`, `docs/`): community fan art, **not** covered by MIT — personal, non-commercial use only
+### Thank you / 特别感谢
 
-macOS version © 2026 Du Haoze · 原 Android 应用 © 2026 LIN428924379
+**This project is a port. Nothing here would exist without
+[LIN428924379/baifanyu](https://github.com/LIN428924379/baifanyu) — the original Android app by
+[@LIN428924379](https://github.com/LIN428924379).**
+
+**All credit for the concept, the character, the artwork and the interaction design belongs to
+the original author. The macOS port reuses their artwork, their interaction design and their
+animation maths, and only re-implements the code for macOS. Thank you for building it and for
+releasing it under the MIT license. 感谢原作者把《白饭鱼》开源出来 —— 这个 macOS 版只是把她的家从手机
+搬到了 Mac 上，创意、角色、立绘、动作设计全部属于原作者。**
+
+### What comes from where / 各部分出处
+
+| Part / 部分 | Origin / 出处 |
+|---|---|
+| Original app, concept, interaction design / 原应用、创意、交互设计 | [LIN428924379/baifanyu](https://github.com/LIN428924379/baifanyu) (MIT) |
+| Standing art & 6 expressions per skin / 立绘与 6 个表情 | The original author's assets (community fan art, **not** MIT) / 原作者的素材（社区同人创作，**不在 MIT 范围**） |
+| Duck squeaks / 小黄鸭音效 | [Mixkit](https://mixkit.co/free-sound-effects/duck/) (Mixkit Free License) |
+| Character / 角色形象 | DeepSeek-community whale girl, as delivered with the original app / 随原应用提供的 DeepSeek 社区鲸鱼娘 |
+| macOS code (SwiftUI + AppKit) / macOS 代码 | This repository, MIT, © 2026 Du Haoze |
+| macOS support / 本移植 | © 2026 [Du Haoze](https://github.com/duhaoze2007) |
+
+### License / 许可证
+
+- **Code**: MIT — see [LICENSE](LICENSE) (keeps the original copyright notice alongside this port's)
+- **Artwork** (`Sources/Resources/*.png`, `docs/`): community fan art from the original project, **not** covered by MIT — personal, non-commercial use only
+- **代码**：MIT —— 见 [LICENSE](LICENSE)（许可证里同时保留了原作者和本移植的版权声明）
+- **美术资源**（`Sources/Resources/*.png`、`docs/`）：来自原项目的社区同人创作，**不在 MIT 许可范围内**，仅限个人非商业使用
+
+macOS version © 2026 Du Haoze · Original Android app © 2026 LIN428924379
